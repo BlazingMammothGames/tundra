@@ -1,8 +1,12 @@
+-cp kha/Sources
+-cp kha/Backends/HTML5
 -cp Sources
--cp Backends/HTML5
 -cp Libraries/glm/src
 -cp Libraries/gltf/src
 -cp Libraries/zui/Sources
+-cp Libraries/glm
+-cp Libraries/gltf
+-cp Libraries/zui
 -D glm
 -D gltf
 -D zui
@@ -25,9 +29,9 @@
 -D sys_html5
 -D kha_html5
 -D kha_html5_js
--D kha_output=build/html5
 -D kha
 -D kha_version=1611
--js html5/kha.js
+-D kha_output=build/html5
+-js build/html5/kha.js
 -debug
 -main Main

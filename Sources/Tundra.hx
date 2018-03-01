@@ -10,7 +10,10 @@ class Tundra {
     static var ui:Zui;
 
     static function initialize():Void {
-        ui = new Zui({ font: Assets.fonts.Inconsolata });
+        ui = new Zui({
+            font: Assets.fonts.Inconsolata,
+            scaleFactor: js.Browser.window.devicePixelRatio
+        });
     }
 
     static function update():Void {

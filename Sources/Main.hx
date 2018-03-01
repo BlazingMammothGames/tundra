@@ -8,6 +8,6 @@ class Main {
             System.notifyOnRender(Tundra.render);
             Scheduler.addTimeTask(Tundra.update, 0, 1/60);
         };
-        System.init({ title: "tundra", width: 1280, height: 720}, Loader.load);
+        System.init({ title: "tundra", width: 800, height: 600}, Loader.load);
     }
 }
