@@ -12,8 +12,8 @@ project.addAssets('Assets/**');
 project.addParameter('-debug');
 
 // HTML target
-project.windowOptions.width = 1280;
-project.windowOptions.height = 720;
+project.windowOptions.width = '100%';
+project.windowOptions.height = '100%';
 
 resolve(project);
 
