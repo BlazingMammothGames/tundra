@@ -1,22 +1,27 @@
 import kha.System;
 import kha.Framebuffer;
 import kha.Assets;
-import zui.Zui;
+/*import zui.Zui;
 import zui.Id;
 
-using CustomZUI;
+using CustomZUI;*/
+import tundra.Tundra;
 
 @:allow(Main)
 class Demo {
-    static var ui:Zui;
+    //static var ui:Zui;
+    static var ui:Tundra;
 
     static function initialize():Void {
-        ui = new Zui({
+        /*ui = new Zui({
             font: Assets.fonts.Inconsolata,
             #if kha_html5
             scaleFactor: js.Browser.window.devicePixelRatio
             #end
-        });
+        });*/
+        ui = new Tundra(Assets.fonts.Inconsolata, Assets.fonts.Inconsolata_Bold);
+        ui.ww = 200;
+        ui.wh = 400;
     }
 
     static function update():Void {
@@ -31,42 +36,12 @@ class Demo {
 
         fb.g4.end();
 
-        var g = fb.g2;
-		ui.begin(g);
+        // ZUI
+		/*var g = fb.g2;
+        ui.begin(g);
 		if(ui.window(Id.handle(), 0, 0, 299, System.windowHeight(), false)) {
             ui.text("Hierarchy", Align.Center);
             ui.separator();
-            /*ui.row([0.1, 0.9]);
-            if(ui.button(showPlayer ? "v" : ">")) {
-                showPlayer = !showPlayer;
-            }
-            if(ui.button("Player", Align.Left)) {
-                selected = 0;
-            }
-            if(showPlayer) {
-                ui.indent();
-                ui.row([0.1, 0.9]);
-                //ui.button("");
-                ui.text("");
-                if(ui.button("Camera", Align.Left)) {
-                    selected = 1;
-                }
-                ui.unindent();
-            }*/
-
-            /*var ph = Id.handle();
-            if(ui.hierarchy(ph, "Player", true)) {
-                ui.indent();
-
-                var ch = Id.handle();
-                ui.hierarchy(ch, "Camera");
-                if(ch.changed) selected = 1;
-
-                ui.unindent();
-            }
-            if(ph.changed) {
-                selected = 0;
-            }*/
             selected = -1;
             var h = ui.hierarchy(Id.handle(), "Player", true);
             if(h.selected) selected = 0;
@@ -105,6 +80,22 @@ class Demo {
                 }
             }
         }
-		ui.end();
+		ui.end();*/
+
+        ui.begin(fb.g2);
+        ui.label("Header", true);
+        ui.separator();
+        ui.label("Label");
+        if(ui.button("Click me")) {
+            js.Browser.console.log('Click me clicked!');
+        }
+        ui.indent();
+            ui.label("Indented");
+            ui.indent();
+                ui.label("Double indented");
+            ui.unindent();
+        ui.unindent();
+        
+        ui.end();
     }
 }
