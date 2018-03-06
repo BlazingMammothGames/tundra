@@ -4,10 +4,10 @@ import kha.Assets;
 import zui.Zui;
 import zui.Id;
 
-using CustomUI;
+using CustomZUI;
 
 @:allow(Main)
-class Tundra {
+class Demo {
     static var ui:Zui;
 
     static function initialize():Void {
@@ -54,7 +54,7 @@ class Tundra {
                 ui.unindent();
             }*/
 
-            var ph = Id.handle();
+            /*var ph = Id.handle();
             if(ui.hierarchy(ph, "Player", true)) {
                 ui.indent();
 
@@ -66,9 +66,18 @@ class Tundra {
             }
             if(ph.changed) {
                 selected = 0;
+            }*/
+            selected = -1;
+            var h = ui.hierarchy(Id.handle(), "Player", true);
+            if(h.selected) selected = 0;
+            if(h.expanded) {
+                ui.indent();
+                var c = ui.hierarchy(Id.handle(), "Camera", false);
+                if(c.selected) selected = 1;
+                ui.unindent();
             }
 		}
-        if(ui.window(Id.handle(), 300, 0, 300, System.windowHeight(), false)) {
+        if(ui.window(Id.handle(), Std.int(300 * js.Browser.window.devicePixelRatio), 0, 300, System.windowHeight(), false)) {
             ui.text("Inspector", Align.Center);
             ui.separator();
             switch(selected) {
@@ -77,12 +86,12 @@ class Tundra {
                     ui.text("Player", Align.Left);
                     if(ui.panel(Id.handle(), "Transform")) {
                         ui.row([0.33, 0.33, 0.34]);
-                        ui.floatInput(Id.handle({ value: 0.0 }), "x");
-                        ui.floatInput(Id.handle({ value: 0.0 }), "y");
-                        ui.floatInput(Id.handle({ value: 0.0 }), "z");
+                        ui.floatInput(Id.handle({ text: "0.0" }), "x");
+                        ui.floatInput(Id.handle({ text: "0.0" }), "y");
+                        ui.floatInput(Id.handle({ text: "0.0" }), "z");
                     }
                     if(ui.panel(Id.handle(), "Health")) {
-                        ui.slider(Id.handle(), "health", 0, 100, true, 100, true);
+                        ui.slider(Id.handle({ value: 100 }), "health", 0, 100, true, 100, true);
                     }
                 }
 
