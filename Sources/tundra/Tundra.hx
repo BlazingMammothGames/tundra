@@ -35,6 +35,8 @@ class Tundra {
 
     // rendering state
     private var indents:Int = 0;
+    private var column:Int = 0;
+    private var columns:Int = 1;
 
     public function new(font:Font, boldFont:Font) {
         this.font = font;
@@ -57,6 +59,8 @@ class Tundra {
         ch = Math.ceil(font.height(fontSize)) + (2 * padding);
 
         indents = 0;
+        column = 0;
+        columns = 1;
 
         g.begin();
 
@@ -116,17 +120,24 @@ class Tundra {
 
     public function indent():Void {
         indents++;
-        cx = wx + (indents * 2.0 * padding);
     }
 
     public function unindent():Void {
         indents--;
         if(indents < 0) indents = 0;
+    }
+
+    public function row(columns:Int):Void {
+        this.columns = columns + 1;
+        calculateX();
+    }
+
+    private inline function calculateX():Void {
         cx = wx + (indents * 2.0 * padding);
     }
 
     private inline function advanceCursor():Void {
-        cx = wx + (indents * 2.0 * padding);
+        calculateX();
         cy += ch;
     }
 
