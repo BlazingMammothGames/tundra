@@ -27,8 +27,10 @@ class Demo {
     static function update():Void {
     }
 
-    static var showPlayer:Bool = false;
-    static var selected:Int = -1;
+    /*static var showPlayer:Bool = false;
+    static var selected:Int = -1;*/
+    static var name:String = "Goat";
+    static var quote:String = "I like cheese";
 
     static function render(fb:Framebuffer):Void {
         fb.g4.begin();
@@ -95,6 +97,14 @@ class Demo {
                 ui.label("Double indented");
             ui.unindent();
         ui.unindent();
+        name = ui.textInput("name", name);
+        quote = ui.textInput("quote", quote);
+
+        ui.row(2);
+        if(ui.button("A")) js.Browser.console.log('A clicked!');
+        if(ui.button("B")) js.Browser.console.log('B clicked!');
+        
+        if(ui.button("C")) js.Browser.console.log('C clicked!');
         
         ui.end();
     }

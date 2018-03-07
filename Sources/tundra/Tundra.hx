@@ -1,7 +1,12 @@
 package tundra;
 
+import haxe.crypto.Crc32;
+import haxe.io.Bytes;
 import kha.Font;
 import kha.graphics2.Graphics;
+import kha.input.KeyCode;
+
+typedef Id = Int;
 
 class Tundra {
     private var g:Graphics;
@@ -10,9 +15,9 @@ class Tundra {
     public var font:Font = null;
     public var boldFont:Font = null;
     public var padding:Float = 4.0;
-    public var fontSize:Int = 10;
+    public var fontSize:Int = 12;
     public var title:String = "";
-    public var theme:Theme = Themes.dark;
+    public var theme:Themes.Theme = Themes.dark;
     public var scale:Float = 1.0;
 
     // window position
@@ -32,11 +37,18 @@ class Tundra {
     private var mouseY:Float = -1;
     private var mouseDown:Bool = false;
     private var mouseReleased:Bool = false;
+    private var keyCode:KeyCode = KeyCode.Unknown;
+    private var keyChar:String = "";
+
+    private var focused:Id = -1;
 
     // rendering state
     private var indents:Int = 0;
     private var column:Int = 0;
     private var columns:Int = 1;
+    private var showTextCursor:Bool = false;
+    private var cursorLocation:Int = 0;
+    private var lastCursorTime:Float = 0.0;
 
     public function new(font:Font, boldFont:Font) {
         this.font = font;
@@ -62,6 +74,11 @@ class Tundra {
         column = 0;
         columns = 1;
 
+        if(kha.System.time - lastCursorTime >= 0.5) {
+            showTextCursor = !showTextCursor;
+            lastCursorTime = kha.System.time;
+        }
+
         g.begin();
 
         g.font = font;
@@ -75,12 +92,14 @@ class Tundra {
         g.end();
 
         mouseReleased = false;
+        keyCode = KeyCode.Unknown;
+        keyChar = "";
     }
 
-    public function label(text:String, header:Bool=false):Void {
+    public function label(label:String, header:Bool=false):Void {
         g.color = theme.LABEL.FOREGROUND;
         if(header) g.font = boldFont;
-        g.drawString(text, (cx + padding) * scale, (cy + padding) * scale);
+        g.drawString(label, (cx + padding) * scale, (cy + padding) * scale);
         if(header) g.font = font;
         advanceCursor();
     }
@@ -99,7 +118,7 @@ class Tundra {
         ch *= 2.0;
     }
 
-    public function button(text:String):Bool {
+    public function button(label:String):Bool {
         var hovering:Bool = isHovering();
         g.color =
             if(hovering && mouseReleased) theme.FOCUSED.BACKGROUND;
@@ -112,33 +131,108 @@ class Tundra {
             else if(hovering && mouseDown) theme.ACTIVE.FOREGROUND;
             else if(hovering) theme.HOVER.FOREGROUND;
             else theme.NORMAL.FOREGROUND;
-        g.drawString(text, (cx + padding + 0.5 * (cw - font.width(fontSize, text))) * scale, (cy + padding) * scale);
+        g.drawString(label, (cx + padding + 0.5 * (cw - font.width(fontSize, label))) * scale, (cy + padding) * scale);
 
         advanceCursor();
         return hovering && mouseReleased;
     }
 
+    public function textInput(label:String, text:String):String {
+        var id:Id = GetID(label);
+        while(StringTools.startsWith(label, '#')) label = label.substr(1);
+
+        var hovering:Bool = isHovering();
+        if(hovering && mouseReleased) {
+            focused = id;
+            cursorLocation = text.length; // TODO: placement in the string?
+        }
+
+        // logic
+        // TODO: implement selections
+        if(focused == id) {
+            switch(keyCode) {
+                case KeyCode.Left: if(cursorLocation > 0) cursorLocation--;
+                case KeyCode.Right: cursorLocation++;
+                case KeyCode.Backspace: {
+                    if(cursorLocation > 0) {
+                        text = text.substr(0, cursorLocation - 1) + text.substr(cursorLocation);
+                        cursorLocation--;
+                    }
+                }
+                case KeyCode.Delete: {
+                    if(cursorLocation < text.length) {
+                        text = text.substr(0, cursorLocation) + text.substr(cursorLocation + 1);
+                    }
+                }
+                case KeyCode.Home: cursorLocation = 0;
+                case KeyCode.End: cursorLocation = text.length;
+                case KeyCode.Return: focused = -1;
+                default: {}
+            }
+
+            if(keyChar != "") {
+                text = text.substr(0, cursorLocation) + keyChar + text.substr(cursorLocation);
+                cursorLocation++;
+            }
+
+            if(cursorLocation > text.length) {
+                cursorLocation = text.length;
+            }
+        }
+
+        // rendering
+        g.color =
+            if(focused == id) theme.ACTIVE.BACKGROUND;
+            else if(hovering) theme.HOVER.BACKGROUND;
+            else theme.NORMAL.BACKGROUND;
+        g.fillRect(cx * scale, cy * scale, cw * scale, ch * scale);
+        g.color =
+            if(focused == id) theme.ACTIVE.FOREGROUND;
+            else if(hovering) theme.HOVER.FOREGROUND;
+            else theme.NORMAL.FOREGROUND;
+        g.drawString(text, (cx + padding) * scale, (cy + padding) * scale);
+        g.drawString(label, (cx + cw - padding - font.width(fontSize, label)) * scale, (cy + padding) * scale);
+
+        if(focused == id && showTextCursor) {
+            var lx:Float = font.width(fontSize, text.substr(0, cursorLocation));
+            g.drawLine((cx + padding + lx) * scale, (cy + padding) * scale, (cx + padding + lx) * scale, (cy + ch - padding) * scale);
+        }
+
+        advanceCursor();
+        return text;
+    }
+
     public function indent():Void {
         indents++;
+        calculateX();
     }
 
     public function unindent():Void {
-        indents--;
-        if(indents < 0) indents = 0;
+        if(indents > 0) {
+            indents--;
+            calculateX();
+        }
     }
 
     public function row(columns:Int):Void {
-        this.columns = columns + 1;
+        column = 0;
+        this.columns = columns;
         calculateX();
     }
 
     private inline function calculateX():Void {
-        cx = wx + (indents * 2.0 * padding);
+        cw = (ww - (indents * 2.0 * padding) - (padding * (columns - 1))) / columns;
+        cx = wx + (indents * 2.0 * padding) + (column * (cw + padding));
     }
 
     private inline function advanceCursor():Void {
+        column++;
+        if(column >= columns) {
+            column = 0;
+            columns = 1;
+            cy += ch + padding;
+        }
         calculateX();
-        cy += ch;
     }
 
     private inline function isHovering():Bool {
@@ -148,6 +242,7 @@ class Tundra {
     }
 
     private function onMouseDown(button:Int, x:Int, y:Int):Void {
+        focused = -1;
 		mouseX = x;
         mouseY = y;
         mouseDown = true;
@@ -169,14 +264,19 @@ class Tundra {
 		
 	}
 
-	private function onKeyDown(code:kha.input.KeyCode):Void {
+	private function onKeyDown(code:KeyCode):Void {
+        keyCode = code;
 	}
 
-	private function onKeyUp(code:kha.input.KeyCode):Void {
+	private function onKeyUp(code:KeyCode):Void {
 
     }
 
 	private function onKeyPress(char:String):Void {
-
+        keyChar = char;
 	}
+
+    private function GetID(label:String):Id {
+        return Crc32.make(Bytes.ofString(label));
+    }
 }
