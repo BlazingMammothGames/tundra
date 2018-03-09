@@ -2,6 +2,7 @@ package tundra;
 
 import haxe.crypto.Crc32;
 import haxe.io.Bytes;
+import haxe.ds.IntMap;
 import kha.graphics2.Graphics;
 import kha.input.KeyCode;
 import kha.Color;
@@ -53,6 +54,9 @@ class GUI {
     private static var cursorLocation:Int = 0;
     private static var lastCursorTime:Float = 0.0;
 
+    private static var currentWindowID:Id = 0;
+    private static var windowHeights:IntMap<Float> = new IntMap<Float>();
+
     public static function hookInputs():Void {
 		kha.input.Mouse.get().notify(onMouseDown, onMouseUp, onMouseMove, onMouseWheel);
 		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp, onKeyPress);
@@ -81,8 +85,10 @@ class GUI {
         keyChar = "";
     }
 
-    public static function window(rect:GUIWindow, title:String, ?id:String):GUIWindow {
-        var id:Id = GetID(title + "w" + (id == null ? "" : id));
+    public static function window(rect:GUIWindow, title:String, ?idw:String):GUIWindow {
+        var id:Id = GetID(title + "w" + (idw == null ? "" : idw));
+        currentWindowID = id;
+        if(!windowHeights.exists(currentWindowID)) windowHeights.set(currentWindowID, 0);
 
         wx = rect.x;
         wy = rect.y;
@@ -143,6 +149,10 @@ class GUI {
         g.drawString(title, (wx + options.padding) * options.scale, (wy + options.padding) * options.scale);
         g.font = options.font;
 
+        resizeHandle(title, idw);
+        rect.w = ww;
+        rect.h = wh;
+
         if(hotControl == id && mouseReleased) {
             hotControl = 0;
             if(kha.System.time - lastClickTime <= 0.5) {
@@ -154,6 +164,41 @@ class GUI {
         }
         advanceCursor();
         return rect;
+    }
+
+    private static function resizeHandle(title:String, ?idw:String):Void {
+        var id:Id = GetID(title + "rh" + (idw == null ? "" : idw));
+        var hovering:Bool = isHoveringCustom(wx + ww - ch, wy + wh - ch, ch, ch);
+        
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
+            mouseXOffset = (mouseX / options.scale) - (wx + ww);
+            mouseYOffset = (mouseY / options.scale) - (wy + wh);
+        }
+
+        if(hotControl == id) {
+            ww = (mouseX / options.scale) - wx - mouseXOffset;
+            wh = (mouseY / options.scale) - wy - mouseYOffset;
+
+            ww = Math.max(ww, (2.0 * options.minLabelWidth) + options.padding);
+        }
+        wh = Math.max(wh, windowHeights.get(currentWindowID));
+        
+        var bg:Color =
+            if(hotControl == id) options.theme.window.pressed.bg;
+            else if(hovering) options.theme.window.hover.fg;
+            else options.theme.window.normal.bg;
+
+        g.color = bg;
+        g.fillTriangle(
+            (wx + ww - options.padding) * options.scale, (wy + wh - options.padding - ch - options.padding) * options.scale,
+            (wx + ww - options.padding) * options.scale, (wy + wh - options.padding - options.padding) * options.scale,
+            (wx + ww - options.padding - ch) * options.scale, (wy + wh - options.padding - options.padding) * options.scale
+        );
+
+        if(hotControl == id && mouseReleased) {
+            hotControl = 0;
+        }
     }
 
     public static function label(label:String, header:Bool=false):Void {
@@ -178,8 +223,8 @@ class GUI {
         ch *= 10.0;
     }
 
-    public static function button(label:String, ?id:String):Bool {
-        var id:Id = GetID(label + "b" + (id == null ? "" : id));
+    public static function button(label:String, ?idb:String):Bool {
+        var id:Id = GetID(label + "b" + (idb == null ? "" : idb));
 
         var hovering:Bool = isHovering();
         if(hovering && mousePressed && hotControl == 0) {
@@ -212,8 +257,8 @@ class GUI {
         return clicked;
     }
 
-    public static function textInput(text:String, label:String, ?id:String):String {
-        var id:Id = GetID(label + "ti" + (id == null ? "" : id));
+    public static function textInput(text:String, label:String, ?idt:String):String {
+        var id:Id = GetID(label + "ti" + (idt == null ? "" : idt));
 
         var hovering:Bool = isHoveringCustom(cx + options.padding + labelWidth + options.padding, cy, controlWidth, ch);
         if(hovering && mousePressed && hotControl == 0) {
@@ -291,18 +336,18 @@ class GUI {
         return text;
     }
     
-    public static function intInput(value:Int, label:String, ?id:String):Int {
+    public static function intInput(value:Int, label:String, ?idi:String):Int {
         // TODO:
         return value;
     }
     
-    public static function floatInput(value:Float, label:String, ?id:String):Float {
+    public static function floatInput(value:Float, label:String, ?idf:String):Float {
         // TODO:
         return value;
     }
 
-    public static function slider(label:String, value:Float, min:Float, max:Float, ?id:String):Float {
-        var id:Id = GetID(label + "s" + (id == null ? "" : id));
+    public static function slider(label:String, value:Float, min:Float, max:Float, ?ids:String):Float {
+        var id:Id = GetID(label + "s" + (ids == null ? "" : ids));
 
         // clamp the value
         value = Math.min(Math.max(value, min), max);
@@ -362,8 +407,8 @@ class GUI {
         return value;
     }
 
-    public static function toggle(value:Bool, label:String, ?id:String):Bool {
-        var id:Id = GetID(label + "t" + (id == null ? "" : id));
+    public static function toggle(value:Bool, label:String, ?idt:String):Bool {
+        var id:Id = GetID(label + "t" + (idt == null ? "" : idt));
 
         var hovering:Bool = isHovering();
         if(hovering && mousePressed && hotControl == 0) {
@@ -405,8 +450,8 @@ class GUI {
         return value;
     }
 
-    public static function foldOut(open:Bool, label:String, ?id:String):Bool {
-        var id:Id = GetID(label + "f" + (id == null ? "" : id));
+    public static function foldOut(open:Bool, label:String, ?idf:String):Bool {
+        var id:Id = GetID(label + "f" + (idf == null ? "" : idf));
 
         var hovering:Bool = isHovering();
         if(hovering && mousePressed && hotControl == 0) {
@@ -447,7 +492,7 @@ class GUI {
 return open;
     }
 
-    public static function combo(selected:Int, label:String, values:Array<String>, ?id:String):Int {
+    public static function combo(selected:Int, label:String, values:Array<String>, ?idc:String):Int {
         // TODO:
         return selected;
     }
@@ -484,6 +529,7 @@ return open;
             column = 0;
             columns = 1;
             cy += ch + options.padding;
+            windowHeights.set(currentWindowID, cy - wy);
         }
         calculateX();
     }

@@ -15,7 +15,7 @@ class GUIOptions {
         1.0;
         #end
     };
-    public var minLabelWidth:Float = 50.0;
+    public var minLabelWidth:Float = 100.0;
 
     public function new() {
         theme = Themes.dark;
