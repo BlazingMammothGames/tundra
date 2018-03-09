@@ -149,9 +149,11 @@ class GUI {
         g.drawString(title, (wx + options.padding) * options.scale, (wy + options.padding) * options.scale);
         g.font = options.font;
 
-        resizeHandle(title, idw);
-        rect.w = ww;
-        rect.h = wh;
+        if(rect.open) {
+            resizeHandle(title, idw);
+            rect.w = ww;
+            rect.h = wh;
+        }
 
         if(hotControl == id && mouseReleased) {
             hotControl = 0;
@@ -516,8 +518,8 @@ return open;
     }
 
     private inline static function calculateX():Void {
-        cw = (ww - (indents * 2.0 * options.padding)) / columns;
-        cx = wx + (indents * 2.0 * options.padding) + (column * cw);
+        cw = (ww - (indents * (ch - options.padding))) / columns;
+        cx = wx + (indents * (ch - options.padding)) + (column * cw);
 
         labelWidth = Math.max(Math.ffloor(cw / 3.0), options.minLabelWidth);
         controlWidth = cw - labelWidth - options.padding;

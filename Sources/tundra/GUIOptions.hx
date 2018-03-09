@@ -6,7 +6,7 @@ class GUIOptions {
     public var font:Font = null;
     public var boldFont:Font = null;
     public var padding:Float = 4.0;
-    public var fontSize:Int = 12;
+    public var fontSize:Int = 16;
     public var theme:Themes.Theme;
     public var scale:Float = {
         #if kha_webgl
