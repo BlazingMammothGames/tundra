@@ -158,14 +158,13 @@ class Tundra {
         g.drawString(label, (cx + padding + 0.5 * (cw - font.width(fontSize, label))) * scale, (cy + padding) * scale);
 
         advanceCursor();
-
         var clicked:Bool = hotControl == id && mouseReleased;
         if(clicked) hotControl = 0;
         return clicked;
     }
 
-    public function textInput(text:String, ?label:String, ?id:String):String {
-        var id:Id = GetID((label == null ? "" : label) + "ti" + (id == null ? "" : id));
+    public function textInput(text:String, label:String, ?id:String):String {
+        var id:Id = GetID(label + "ti" + (id == null ? "" : id));
 
         var hovering:Bool = isHoveringCustom(cx + padding + labelWidth + padding, cy, controlWidth, ch);
         if(hovering && mousePressed && hotControl == 0) {
@@ -301,6 +300,49 @@ class Tundra {
         g.drawString(valueString, (cx + cw - padding - font.width(fontSize, valueString)) * scale, (cy + padding) * scale);
 
         advanceCursor();
+        return value;
+    }
+
+    public function toggle(value:Bool, label:String, ?id:String):Bool {
+        var id:Id = GetID(label + "t" + (id == null ? "" : id));
+
+        var hovering:Bool = isHovering();
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
+        }
+
+        var fg:Color =
+            if(hotControl == id) theme.button.pressed.fg;
+            else if(hovering) theme.button.hover.fg;
+            else theme.button.normal.fg;
+        var bg:Color =
+            if(hotControl == id) theme.button.pressed.bg;
+            else if(hovering) theme.button.hover.bg;
+            else theme.button.normal.bg;
+        var border:Color =
+            if(hotControl == id) theme.button.pressed.border;
+            else if(hovering) theme.button.hover.border;
+            else theme.button.normal.border;
+
+        g.color = theme.label.fg;
+        g.drawString(label, (cx + padding) * scale, (cy + padding) * scale);
+
+        g.color = bg;
+        g.fillRect((cx + padding + labelWidth + padding) * scale, cy * scale, ch * scale, ch * scale);
+        g.color = border;
+        g.drawRect((cx + padding + labelWidth + padding) * scale, cy * scale, ch * scale, ch * scale, scale);
+
+        if(value) {
+            g.color = fg;
+            g.fillRect((cx + padding + labelWidth + padding + padding) * scale, (cy + padding) * scale, (ch - padding - padding) * scale, (ch - padding - padding) * scale);
+        }
+
+        advanceCursor();
+        var clicked:Bool = hotControl == id && mouseReleased;
+        if(clicked) {
+            hotControl = 0;
+            value = !value;
+        }
         return value;
     }
 

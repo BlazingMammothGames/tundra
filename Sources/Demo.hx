@@ -18,6 +18,7 @@ class Demo {
     static var name:String = "Goat";
     static var quote:String = "I like cheese";
     static var sliderValue:Float = 50;
+    static var checked:Bool = false;
 
     static function render(fb:Framebuffer):Void {
         fb.g4.begin();
@@ -45,6 +46,7 @@ class Demo {
         if(ui.button("A")) js.Browser.console.log('A clicked!');
         if(ui.button("B")) js.Browser.console.log('B clicked!');
         sliderValue = ui.slider("Slider", sliderValue, 0, 100);
+        checked = ui.toggle(checked, "Toggle me!");
         
         ui.end();
     }
