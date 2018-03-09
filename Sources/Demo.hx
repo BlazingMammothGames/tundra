@@ -31,6 +31,7 @@ class Demo {
     static var selected:Int = -1;*/
     static var name:String = "Goat";
     static var quote:String = "I like cheese";
+    static var sliderValue:Float = 50;
 
     static function render(fb:Framebuffer):Void {
         fb.g4.begin();
@@ -103,8 +104,7 @@ class Demo {
         ui.row(2);
         if(ui.button("A")) js.Browser.console.log('A clicked!');
         if(ui.button("B")) js.Browser.console.log('B clicked!');
-        
-        if(ui.button("C")) js.Browser.console.log('C clicked!');
+        sliderValue = ui.slider("Slider", sliderValue, 0, 100);
         
         ui.end();
     }

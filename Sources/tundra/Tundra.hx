@@ -35,12 +35,13 @@ class Tundra {
     // input state
     private var mouseX:Float = -1;
     private var mouseY:Float = -1;
+    private var mousePressed:Bool = false;
     private var mouseDown:Bool = false;
     private var mouseReleased:Bool = false;
     private var keyCode:KeyCode = KeyCode.Unknown;
     private var keyChar:String = "";
 
-    private var focused:Id = -1;
+    private var hotControl:Id = 0;
 
     // rendering state
     private var indents:Int = 0;
@@ -91,6 +92,7 @@ class Tundra {
     public function end():Void {
         g.end();
 
+        mousePressed = false;
         mouseReleased = false;
         keyCode = KeyCode.Unknown;
         keyChar = "";
@@ -106,7 +108,7 @@ class Tundra {
 
     public function separator():Void {
         g.color = theme.LABEL.FOREGROUND;
-        ch *= 0.5;
+        ch *= 0.1;
         g.drawLine(
             (cx + padding) * scale,
             (cy + 0.5 * ch) * scale,
@@ -115,41 +117,50 @@ class Tundra {
             2.0
         );
         advanceCursor();
-        ch *= 2.0;
+        ch *= 10.0;
     }
 
-    public function button(label:String):Bool {
+    public function button(label:String, id:String=""):Bool {
+        var id:Id = GetID(label + "b" + id);
+
         var hovering:Bool = isHovering();
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
+        }
+
         g.color =
-            if(hovering && mouseReleased) theme.FOCUSED.BACKGROUND;
-            else if(hovering && mouseDown) theme.ACTIVE.BACKGROUND;
+            if(hotControl == id) theme.ACTIVE.BACKGROUND;
             else if(hovering) theme.HOVER.BACKGROUND;
             else theme.NORMAL.BACKGROUND;
         g.fillRect(cx * scale, cy * scale, cw * scale, ch * scale);
         g.color =
-            if(hovering && mouseReleased) theme.FOCUSED.FOREGROUND;
-            else if(hovering && mouseDown) theme.ACTIVE.FOREGROUND;
+            if(hotControl == id) theme.ACTIVE.FOREGROUND;
             else if(hovering) theme.HOVER.FOREGROUND;
             else theme.NORMAL.FOREGROUND;
         g.drawString(label, (cx + padding + 0.5 * (cw - font.width(fontSize, label))) * scale, (cy + padding) * scale);
 
         advanceCursor();
-        return hovering && mouseReleased;
+
+        var clicked:Bool = hotControl == id && mouseReleased;
+        if(clicked) hotControl = 0;
+        return clicked;
     }
 
-    public function textInput(label:String, text:String):String {
-        var id:Id = GetID(label);
-        while(StringTools.startsWith(label, '#')) label = label.substr(1);
+    public function textInput(label:String, text:String, id:String=""):String {
+        var id:Id = GetID(label + "ti" + id);
 
         var hovering:Bool = isHovering();
-        if(hovering && mouseReleased) {
-            focused = id;
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
             cursorLocation = text.length; // TODO: placement in the string?
+        }
+        else if(!hovering && mousePressed && hotControl == id) {
+            hotControl = 0;
         }
 
         // logic
         // TODO: implement selections
-        if(focused == id) {
+        if(hotControl == id) {
             switch(keyCode) {
                 case KeyCode.Left: if(cursorLocation > 0) cursorLocation--;
                 case KeyCode.Right: cursorLocation++;
@@ -166,7 +177,7 @@ class Tundra {
                 }
                 case KeyCode.Home: cursorLocation = 0;
                 case KeyCode.End: cursorLocation = text.length;
-                case KeyCode.Return: focused = -1;
+                case KeyCode.Return: hotControl = 0;
                 default: {}
             }
 
@@ -182,24 +193,66 @@ class Tundra {
 
         // rendering
         g.color =
-            if(focused == id) theme.ACTIVE.BACKGROUND;
+            if(hotControl == id) theme.ACTIVE.BACKGROUND;
             else if(hovering) theme.HOVER.BACKGROUND;
             else theme.NORMAL.BACKGROUND;
         g.fillRect(cx * scale, cy * scale, cw * scale, ch * scale);
         g.color =
-            if(focused == id) theme.ACTIVE.FOREGROUND;
+            if(hotControl == id) theme.ACTIVE.FOREGROUND;
             else if(hovering) theme.HOVER.FOREGROUND;
             else theme.NORMAL.FOREGROUND;
         g.drawString(text, (cx + padding) * scale, (cy + padding) * scale);
         g.drawString(label, (cx + cw - padding - font.width(fontSize, label)) * scale, (cy + padding) * scale);
 
-        if(focused == id && showTextCursor) {
+        if(hotControl == id && showTextCursor) {
             var lx:Float = font.width(fontSize, text.substr(0, cursorLocation));
             g.drawLine((cx + padding + lx) * scale, (cy + padding) * scale, (cx + padding + lx) * scale, (cy + ch - padding) * scale);
         }
 
         advanceCursor();
         return text;
+    }
+
+    public function slider(label:String, value:Float, min:Float, max:Float, id:String=""):Float {
+        var id:Id = GetID(label + "s" + id);
+
+        // clamp the value
+        value = Math.min(Math.max(value, min), max);
+
+        // positioning
+        var y:Float = (cy + padding + (ch * 0.5));
+        var percent:Float = (value - min) / (max - min);
+        var x:Float = cx + padding + (percent * (cw  - (2 * padding)));
+        var size:Float = ch - (2 * padding);
+        
+        var hovering:Bool = isHoveringCustom(x - (0.5 * size), y - (0.5 * size), size, size);
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
+        }
+        else if(hotControl == id && mouseReleased) {
+            hotControl = 0;
+        }
+
+        // dragging
+        if(hotControl == id) {
+            percent = ((mouseX / scale) - (cx + padding)) / ((cx + cw - padding) - (cx + padding));
+            percent = Math.min(Math.max(percent, 0.0), 1.0);
+            value = min + (percent * (max - min));
+            x = cx + padding + (percent * (cw  - (2 * padding)));
+        }
+
+        // rendering
+        g.color = kha.Color.Black;
+        g.drawLine((cx + padding) * scale, (cy + padding + (ch * 0.5)) * scale, (cx + cw - padding) * scale, (cy + padding + (ch * 0.5)) * scale, 2.0);
+
+        g.color =
+            if(hotControl == id) theme.ACTIVE.BACKGROUND;
+            else if(hovering) theme.HOVER.FOREGROUND;
+            else theme.NORMAL.FOREGROUND;
+        g.fillRect((x - (0.5 * size)) * scale, (y - (0.5 * size)) * scale, size * scale, size * scale);
+
+        advanceCursor();
+        return value;
     }
 
     public function indent():Void {
@@ -241,18 +294,30 @@ class Tundra {
             mouseY >= cy * scale && mouseY <= (cy + ch) * scale;
     }
 
+    private inline function isHoveringCustom(x:Float, y:Float, w:Float, h:Float):Bool {
+        return
+            mouseX >= x * scale && mouseX <= (x + w) * scale &&
+            mouseY >= y * scale && mouseY <= (y + h) * scale;
+    }
+
     private function onMouseDown(button:Int, x:Int, y:Int):Void {
-        focused = -1;
 		mouseX = x;
         mouseY = y;
-        mouseDown = true;
+
+        if(button == 0) {
+            mousePressed = true;
+            mouseDown = true;
+        }
     }
 
 	private function onMouseUp(button:Int, x:Int, y:Int):Void {
 		mouseX = x;
         mouseY = y;
-        mouseDown = false;
-        mouseReleased = true;
+
+        if(button == 0) {
+            mouseDown = false;
+            mouseReleased = true;
+        }
     }
 
 	private function onMouseMove(x:Int, y:Int, movementX:Int, movementY:Int):Void {
