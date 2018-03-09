@@ -241,6 +241,16 @@ class Tundra {
         advanceCursor();
         return text;
     }
+    
+    public function intInput(value:Int, label:String, ?id:String):Int {
+        // TODO:
+        return value;
+    }
+    
+    public function floatInput(value:Float, label:String, ?id:String):Float {
+        // TODO:
+        return value;
+    }
 
     public function slider(label:String, value:Float, min:Float, max:Float, ?id:String):Float {
         var id:Id = GetID(label + "s" + (id == null ? "" : id));
@@ -386,6 +396,11 @@ class Tundra {
             open = !open;
         }
         return open;
+    }
+
+    public function combo(selected:Int, label:String, values:Array<String>, ?id:String):Int {
+        // TODO:
+        return selected;
     }
 
     public function indent():Void {
