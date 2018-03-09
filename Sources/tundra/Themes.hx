@@ -4,11 +4,26 @@ import kha.Color;
 
 // TODO: disabled styles
 typedef Theme = {
-    panel: {
-        bg: Color
+    window: {
+        normal: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        hover: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        pressed: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        }
     },
-    label: {
-        fg: Color
+    panel: {
+        fg: Color,
+        bg: Color
     },
     separator: {
         fg: Color
@@ -66,11 +81,26 @@ typedef Theme = {
 
 class Themes {
     public static var dark:Theme = {
-        panel: {
-            bg: 0xff383838
+        window: {
+            normal: {
+                bg: 0xff545454,
+                fg: 0xffffffff,
+                border: 0xffcccccc
+            },
+            hover: {
+                bg: 0xff545454,
+                fg: 0xffffffff,
+                border: 0xffffffff
+            },
+            pressed: {
+                bg: 0xff3e5f96,
+                fg: 0xffffffff,
+                border: 0xff3e5f96
+            }
         },
-        label: {
-            fg: 0xffffffff
+        panel: {
+            fg: 0xffffffff,
+            bg: 0xff383838
         },
         separator: {
             fg: 0xff4d4d4d
