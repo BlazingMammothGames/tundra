@@ -346,6 +346,48 @@ class Tundra {
         return value;
     }
 
+    public function foldOut(open:Bool, label:String, ?id:String):Bool {
+        var id:Id = GetID(label + "f" + (id == null ? "" : id));
+
+        var hovering:Bool = isHovering();
+        if(hovering && mousePressed && hotControl == 0) {
+            hotControl = id;
+        }
+
+        var fg:Color =
+            if(hotControl == id) theme.button.pressed.fg;
+            else if(hovering) theme.button.hover.fg;
+            else theme.button.normal.fg;
+
+        g.color = fg;
+        var arrowSize:Float = ch - padding - padding;
+        if(open) {
+            g.fillTriangle(
+                (cx + padding) * scale, (cy + padding) * scale,
+                (cx + padding + arrowSize) * scale, (cy + padding) * scale,
+                (cx + padding + (0.5 * arrowSize)) * scale, (cy + padding + arrowSize) * scale
+            );
+        }
+        else {
+            g.fillTriangle(
+                (cx + padding) * scale, (cy + padding) * scale,
+                (cx + padding + arrowSize) * scale, (cy + padding + (0.5 * arrowSize)) * scale,
+                (cx + padding) * scale, (cy + padding + arrowSize) * scale
+            );
+        }
+
+        g.color = theme.label.fg;
+        g.drawString(label, (cx + padding + arrowSize + padding) * scale, (cy + padding) * scale);
+
+        advanceCursor();
+        var clicked:Bool = hotControl == id && mouseReleased;
+        if(clicked) {
+            hotControl = 0;
+            open = !open;
+        }
+        return open;
+    }
+
     public function indent():Void {
         indents++;
         calculateX();
