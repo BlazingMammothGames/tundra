@@ -2,40 +2,127 @@ package tundra;
 
 import kha.Color;
 
-typedef Style = {
-    var BACKGROUND:Color;
-    var FOREGROUND:Color;
-}
-
+// TODO: disabled styles
 typedef Theme = {
-    var LABEL:Style;
-    var NORMAL:Style;
-    var HOVER:Style;
-    var ACTIVE:Style;
-    var FOCUSED:Style;
+    panel: {
+        bg: Color
+    },
+    label: {
+        fg: Color
+    },
+    separator: {
+        fg: Color
+    },
+    button: {
+        normal: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        hover: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        pressed: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        }
+    },
+    textInput: {
+        normal: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        hover: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        },
+        active: {
+            bg: Color,
+            fg: Color,
+            border: Color
+        }
+    },
+    slider: {
+        bar: Color,
+        normal: {
+            border: Color,
+            handle: Color
+        },
+        hover: {
+            border: Color,
+            handle: Color
+        },
+        pressed: {
+            border: Color,
+            handle: Color
+        }
+    }
 }
 
 class Themes {
     public static var dark:Theme = {
-        LABEL: {
-            BACKGROUND: 0xff383838,
-            FOREGROUND: 0xffffffff
+        panel: {
+            bg: 0xff383838
         },
-        NORMAL: {
-            BACKGROUND: 0xffc7c7c7,
-            FOREGROUND: 0xff000000
+        label: {
+            fg: 0xffffffff
         },
-        HOVER: {
-            BACKGROUND: 0xff4d4d4d,
-            FOREGROUND: 0xffffffff
+        separator: {
+            fg: 0xff4d4d4d
         },
-        ACTIVE: {
-            BACKGROUND: 0xff3e5f96,
-            FOREGROUND: 0xffffffff
+        button: {
+            normal: {
+                bg: 0xff545454,
+                fg: 0xffffffff,
+                border: 0xffcccccc
+            },
+            hover: {
+                bg: 0xff545454,
+                fg: 0xffffffff,
+                border: 0xffffffff
+            },
+            pressed: {
+                bg: 0xff3e5f96,
+                fg: 0xffffffff,
+                border: 0xff3e5f96
+            }
         },
-        FOCUSED: {
-            BACKGROUND: 0xff000000,
-            FOREGROUND: 0xffffffff
+        textInput: {
+            normal: {
+                bg: 0xff414141,
+                fg: 0xffffffff,
+                border: 0xff000000
+            },
+            hover: {
+                bg: 0xff414141,
+                fg: 0xffffffff,
+                border: 0xffffffff
+            },
+            active: {
+                bg: 0xff3e5f96,
+                fg: 0xffffffff,
+                border: 0xff3e5f96
+            }
+        },
+        slider: {
+            bar: 0xff414141,
+            normal: {
+                border: 0xffcccccc,
+                handle: 0xff545454
+            },
+            hover: {
+                border: 0xffffffff,
+                handle: 0xff545454
+            },
+            pressed: {
+                border: 0xff3e5f96,
+                handle: 0xff3e5f96
+            }
         }
     };
 }
